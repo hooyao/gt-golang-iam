@@ -1,0 +1,71 @@
+version: "3.9" 
+services:
+  mariadb:
+    image: mariadb:10.8.2-focal
+    container_name: iam_mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./mariadb:/docker-entrypoint-initdb.d:ro
+      - maria_data:/var/lib/mysql
+      - maria_backup:/backup
+    ports:
+      - "3306:3306"
+  adminer:
+    image: adminer
+    container_name: iam_adminer
+    restart: always
+    ports:
+      - 8080:8080
+  
+  redis:
+    image: redis:alpine3.15
+    container_name: iam_redis
+    restart: always
+    command: redis-server --requirepass "123"
+    ports:
+      - 6379:6379
+  redis-ui:
+    image: patrikx3/p3x-redis-ui:2022.4.116
+    container_name: iam_redis_ui
+    restart: always
+    ports:
+      - 7843:7843
+    volumes:
+      - p3x_redis_settings:/settings
+  
+  mongo:
+    image: mongo:5.0.6-focal
+    container_name: iam_mongodb
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: "123"
+      MONGO_INITDB_DATABASE: "iam_analytics"
+    volumes:
+      - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongo_data:/data/db
+  mongo-express:
+    image: mongo-express
+    container_name: iam_mongodb_express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "123"
+      ME_CONFIG_MONGODB_URL: mongodb://iam:123@mongo:27017/iam_analytics
+  
+volumes:
+  mongo_data: {}
+  redis_volume: {}
+  maria_data: {}
+  maria_backup: {}
+  p3x_redis_settings: {}
+  
